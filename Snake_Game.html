@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title></title>
+<style type="text/css">
+*{margin:0;padding: 0}
+#container{
+	border:1px solid #ccc;
+	border-bottom: none;
+	border-right: none;
+	position: relative;
+}
+ul{
+	list-style: none;
+}
+ul li{
+	border:1px solid #ccc;
+	border-top:none;
+	border-left:none;
+	float:left;
+}
+#container > div{
+	float: right;
+}
+#person > div{
+	background: #00ff00;
+	position: absolute;
+	left:0px;
+	top:0px;
+}
+.food{
+	position: absolute;
+	left:0px;
+	top:0px;
+	background: blue;
+}
+.personBody{
+	opacity: .5;
+}
+</style>
+</head>
+<body>
+
+<div id='container'>
+
+	<ul id="uls"></ul>
+	<button id="btn">开始游戏</button>
+	<div id="box">积分:0</div>
+	<div id="person"></div>
+
+</div>
+
+<script type="text/javascript">
+
+var container = $id("container"),
+	timer = null,
+	food = null,
+	uls = $id("uls"),
+	box=$id("box"),
+	index=0,
+	btn = $id("btn"),
+	person = $id("person"),
+	personDiv = $tagName(person,"div"),
+	lis = $tagName(uls,"li"),
+	datas = {size:20,x:10,y:10},//size：元素的宽高
+	perData = {speed:200,code:39};
+function init(){ //初始化游戏
+	createMap();
+}
+function createMap(){ //创建地图
+
+	container.style.width = (datas.size+1)*datas.x+"px";
+							
+	for(var i=0;i<datas.x*datas.y;i++){
+
+		var oDiv = document.createElement("li");
+		oDiv.style.width = oDiv.style.height = datas.size+"px";
+		oDiv.index=i;
+		uls.appendChild(oDiv);
+	}
+	start();
+}	
+function start(){ //点击的开始
+	btn.onclick = function(){
+		createPerson();
+		movePerson();
+		bindPerson();
+		createFood();
+	}
+}
+function createFood(){ //创建食物
+    
+    var hrr=[];
+    for (var i = 0; i < lis.length; i++) {
+    	if(isFilter(lis[i])){
+            hrr.push(lis[i]);
+    	}
+    }
+    function isFilter(li){
+    	for (var i = 0; i < personDiv.length; i++) {
+    		if(li.index==personDiv[i].index){
+    			return false;
+    		}
+    	}
+    	return true;
+    }
+	var random = Math.floor(Math.random()*(hrr.length-1));
+	food = document.createElement("div");
+	food.className = "food";
+	food.style.width = food.style.height = datas.size+1+"px";
+	food.style.left = hrr[random].offsetLeft+"px";
+	food.style.top = hrr[random].offsetTop+"px";
+	container.appendChild(food);
+
+}
+function createPerson(){ //创建人物
+
+	var oPerson = document.createElement("div");
+	oPerson.style.width = oPerson.style.height = datas.size+1+"px";
+	oPerson.index = 0;
+	person.appendChild(oPerson);
+}
+function Num(){   //改变积分
+    index+=10;
+    box.innerHTML="积分:"+index;
+}
+function isSelf(){ //避免蛇头与自身相撞
+    for (var i = 1; i < personDiv.length; i++) {
+    	if(pz(personDiv[0],personDiv[i])){
+    		return true;
+    	}
+    }
+    return false;
+}
+function isOut(){ //避免蛇出边界
+    for (var i = 0; i < lis.length; i++) {
+    	if(pz(lis[i],personDiv[0])){
+    		return false;
+    	}
+    }
+    return true;
+}
+function movePerson(){  //移动
+
+	timer = setInterval(function(){
+        if(isOut()||isSelf()){
+        	alert("Game over!")
+        	clearInterval(timer);
+        }
+		if(pz(personDiv[0],food)){
+			food.className = "personBody";
+			person.appendChild(food);
+			createFood();
+			Num();
+		}
+
+		for(var i=personDiv.length-1;i>0;i--){
+
+			personDiv[i].style.left = personDiv[i-1].offsetLeft+"px";
+
+			personDiv[i].style.top = personDiv[i-1].offsetTop+"px";
+			personDiv[i].index=personDiv[i-1].index;
+
+		}
+
+		switch(perData.code){
+			case 37:
+				personDiv[0].style.left = personDiv[0].offsetLeft-(datas.size+1)+"px";
+				personDiv[0].index-=1;
+			break;
+			case 38:
+				personDiv[0].style.top = personDiv[0].offsetTop-(datas.size+1)+"px";
+				personDiv[0].index-=datas.x;
+			break;
+			case 39:
+				personDiv[0].style.left = personDiv[0].offsetLeft+(datas.size+1)+"px";
+				personDiv[0].index+=1;
+			break;
+			case 40:
+				personDiv[0].style.top = personDiv[0].offsetTop+(datas.size+1)+"px";
+				personDiv[0].index+=datas.x;
+			break;
+		}
+
+	},perData.speed);
+}
+function bindPerson(){
+
+	document.onkeydown = function(e){
+		var e = window.event || e;
+		switch(e.keyCode){
+			case 37:
+				perData.code = 37;			
+			break;	
+			case 38:
+				perData.code = 38;				
+			break;	
+			case 39:
+				perData.code = 39;				
+			break;	
+			case 40:
+				perData.code = 40;				
+			break;	
+		}
+	}
+}
+function pz(el1,el2){ //碰撞
+
+	var l1 = el1.offsetLeft;
+	var r1 = el1.offsetLeft+el1.offsetWidth;
+	var t1 = el1.offsetTop;
+	var b1 = el1.offsetTop+el1.offsetHeight;
+
+	var l2 = el2.offsetLeft;
+	var r2 = el2.offsetLeft+el2.offsetWidth;
+	var t2 = el2.offsetTop;
+	var b2 = el2.offsetTop+el2.offsetHeight;
+
+	if(  r1<=l2 ||  b1<=t2 || l1>=r2 || t1>=b2){
+		return false;
+	}else{
+		return true;
+	}
+}
+function $tagName(parend,child){ //按标签名获取对象
+	return parend.getElementsByTagName(child);	
+}
+function $id(id){ //按id获取对象
+	return document.getElementById(id);
+}
+init();
+</script>
+
+
+</body>
+</html>
